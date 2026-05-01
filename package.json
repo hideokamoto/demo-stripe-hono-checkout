@@ -1,0 +1,28 @@
+{
+  "name": "stripe-hono-practice",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.tsx",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "hideokamoto",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "hono": "^4.12.16",
+    "stripe": "^22.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260430.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5",
+    "wrangler": "^4.87.0"
+  }
+}

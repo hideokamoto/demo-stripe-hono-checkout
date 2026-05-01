@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "stripe-hono-practice",
+  "main": "src/index.tsx",
+  "compatibility_date": "2026-04-28",
+  "vars": {
+    "STRIPE_PUBLISHABLE_KEY": "pk_test_example",
+    "BASE_URL": "http://localhost:8787"
+  }
+}

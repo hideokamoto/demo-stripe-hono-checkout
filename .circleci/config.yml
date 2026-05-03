@@ -1,0 +1,83 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@7.2.1
+
+jobs:
+  deploy-production:
+    executor:
+      name: node/default
+      tag: "22.14"
+    environment:
+      DEPLOY_ENVIRONMENT_NAME: production
+      DEPLOY_COMPONENT_NAME: stripe-hono-practice
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Set deploy marker name
+          command: |
+            echo "export DEPLOY_NAME=\"stripe-hono-practice-${CIRCLE_WORKFLOW_ID}\"" >> "$BASH_ENV"
+      - run:
+          name: Plan deployment (deploy marker)
+          command: |
+            circleci run release plan "$DEPLOY_NAME" \
+              --environment-name="$DEPLOY_ENVIRONMENT_NAME" \
+              --component-name="$DEPLOY_COMPONENT_NAME" \
+              --target-version="$CIRCLE_SHA1"
+      - run:
+          name: Deploy to Cloudflare Workers
+          command: npm run deploy
+      - run:
+          name: Update deploy marker to RUNNING
+          command: circleci run release update "$DEPLOY_NAME" --status=RUNNING
+      - run:
+          name: Update deploy marker to SUCCESS
+          command: circleci run release update "$DEPLOY_NAME" --status=SUCCESS
+          when: on_success
+      - run:
+          name: Update deploy marker to FAILED
+          command: |
+            circleci run release update "$DEPLOY_NAME" \
+              --status=FAILED \
+              --failure-reason="${FAILURE_REASON:-Deployment failed}"
+          when: on_fail
+
+  cancel-deploy:
+    docker:
+      - image: cimg/base:current
+    steps:
+      - run:
+          name: Update deploy marker to CANCELED
+          command: |
+            DEPLOY_NAME="stripe-hono-practice-${CIRCLE_WORKFLOW_ID}"
+            circleci run release update "$DEPLOY_NAME" --status=CANCELED
+
+workflows:
+  build-deploy:
+    jobs:
+      - node/run:
+          name: test
+          executor:
+            name: node/default
+            tag: "22.14"
+          pkg-manager: npm
+          post_install_steps:
+            - run:
+                name: Typecheck
+                command: npm run typecheck
+          npm-run: test
+      - deploy-production:
+          requires:
+            - test
+          filters:
+            branches:
+              only: main
+      - cancel-deploy:
+          requires:
+            - deploy-production:
+                - canceled
+          filters:
+            branches:
+              only: main

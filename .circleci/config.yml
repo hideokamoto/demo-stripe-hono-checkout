@@ -4,10 +4,29 @@ orbs:
   node: circleci/node@7.2.1
 
 jobs:
+  test:
+    executor:
+      name: node/default
+      tag: "22.14"
+      resource_class: small
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Typecheck
+          command: npm run typecheck
+      - run:
+          name: Test
+          command: npm run test
+      - store_test_results:
+          path: reports
+
   deploy-production:
     executor:
       name: node/default
       tag: "22.14"
+      resource_class: small
     environment:
       DEPLOY_ENVIRONMENT_NAME: production
       DEPLOY_COMPONENT_NAME: stripe-hono-practice
@@ -45,6 +64,7 @@ jobs:
           when: on_fail
 
   cancel-deploy:
+    resource_class: small
     docker:
       - image: cimg/base:current
     steps:
@@ -57,18 +77,9 @@ jobs:
 workflows:
   build-deploy:
     jobs:
-      - node/run:
-          name: test
-          executor:
-            name: node/default
-            tag: "22.14"
-          pkg-manager: npm
-          post_install_steps:
-            - run:
-                name: Typecheck
-                command: npm run typecheck
-          npm-run: test
+      - test
       - deploy-production:
+          context: cloudflare
           requires:
             - test
           filters:

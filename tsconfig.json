@@ -10,5 +10,5 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx"
   },
-  "include": ["src/**/*", "worker-configuration.d.ts", "env.d.ts"]
+  "include": ["src/**/*", "worker-configuration.d.ts", "env.d.ts", "vitest.config.ts"]
 }
